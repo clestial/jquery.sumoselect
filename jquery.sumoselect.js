@@ -48,7 +48,8 @@
             prefix: '',                   // some prefix usually the field name. eg. '<b>Hello</b>'
             locale: ['OK', 'Cancel', 'Select All'],  // all text that is used. don't change the index.
             up: false,                    // set true to open upside.
-            showTitle: true               // set to false to prevent title (tooltip) from appearing
+            showTitle: true,              // set to false to prevent title (tooltip) from appearing,
+            optGroupSelect: false         // set true to make all options in optgroup selectable via optgroup
         }, options);
 
         var ret = this.each(function () {
@@ -138,14 +139,16 @@
                     var lis = [], O = this;
                     $(opts).each(function (i, opt) {       // parsing options to li
                         opt = $(opt);
-                        lis.push(opt.is('optgroup') ?
-                            $('<li class="group ' + (opt[0].disabled ? 'disabled' : '') + '"><label>' + opt.attr('label') + '</label><ul></ul></li>')
+                        if (opt.is('optgroup')) {
+                            li = $('<li class="group ' + (opt[0].disabled ? 'disabled' : '') + '"><label><span><i></i></span>' + opt.attr('label') + '</label><ul></ul></li>')
                                 .find('ul')
                                 .append(O.prepItems(opt.children(), opt[0].disabled))
-                                .end()
-                            :
-                            O.createLi(opt, d)
-                        );
+                                .end();
+                            O.onGrpClick(li.find("> label"), d);
+                            lis.push(li);
+                        } else {
+                            lis.push(O.createLi(opt, d));
+                        }
                     });
                     return lis;
                 },
@@ -490,6 +493,11 @@
                             if (li.data('opt')[0].selected === false) {
                                 O.lastUnselected = li.data('opt')[0].textContent;
                             }
+                            ul = li.closest("ul");
+                            if (ul.find("li").length == ul.find("li.selected").length)
+                                ul.closest(".group").addClass("selected");
+                            else
+                                ul.closest(".group").removeClass("selected");
                             O.selAllState();
                         }
                         else {
@@ -505,6 +513,43 @@
                         }
 
                         if (!O.is_multi) O.hideOpts(); //if its not a multiselect then hide on single select.
+                    });
+                },
+                onGrpClick: function (li) {
+                    var O = this;
+                    li.click(function () {
+                        var li = $(this);
+
+                        if (!li.closest(".group").hasClass("disabled")) {
+                            li.closest(".group").toggleClass("selected");
+                            if (O.is_multi) {
+                                li.closest(".group").find(".opt:not(.disabled)").each(function () {
+                                    li = $(this);
+                                    if (li.closest(".group").hasClass("selected"))
+                                        li.addClass('selected');
+                                    else
+                                        li.removeClass('selected');
+                                    li.data('opt')[0].selected = li.hasClass('selected');
+                                    if (li.data('opt')[0].selected === false) {
+                                        O.lastUnselected = li.data('opt')[0].textContent;
+                                    }
+                                    O.selAllState();
+                                });
+                            }
+                            else {
+                                /*li.parent().find('li.selected').removeClass('selected'); //if not multiselect then remove all selections from this list
+                            li.toggleClass('selected');
+                            li.data('opt')[0].selected = true;*/
+                            }
+
+                            //branch for combined change event.
+                            if (!(O.is_multi && settings.triggerChangeCombined && (O.is_floating || settings.okCancelInMulti))) {
+                                O.setText();
+                                O.callChange();
+                            }
+
+                            if (!O.is_multi) O.hideOpts(); //if its not a multiselect then hide on single select.
+                        }
                     });
                 },
 
