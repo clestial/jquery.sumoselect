@@ -29,6 +29,7 @@
             csvDispCount: 3,              // display no. of items in multiselect. 0 to display all.
             captionFormat: '{0} Selected', // format of caption text. you can set your locale.
             captionFormatAllSelected: '{0} all selected!', // format of caption text when all elements are selected. set null to use captionFormat. It will not work if there are disabled elements in select.
+            captionSeparator: ', ',       // How to display selected elements, eg. '<br>' to show one caption per row.
             floatWidth: 400,              // Screen width of device at which the list is rendered in floating popup fashion.
             forceCustomRendering: false,  // force the custom modal on all devices below floatWidth resolution.
             nativeOnDevice: ['Android', 'BlackBerry', 'iPhone', 'iPad', 'iPod', 'Opera Mini', 'IEMobile', 'Silk'], //
@@ -570,7 +571,7 @@
 
                                 break;
                             }
-                            else O.placeholder += $(sels[i]).text() + ", ";
+                            else O.placeholder += $(sels[i]).text() + settings.captionSeparator;
                         }
                         O.placeholder = O.placeholder.replace(/,([^,]*)$/, '$1'); //remove unexpected "," from last.
                     }
